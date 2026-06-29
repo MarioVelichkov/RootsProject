@@ -28,8 +28,8 @@ class PlateCalibration:
     origin_x_m: float = 0.10775
     origin_y_m: float = 0.024
     origin_z_m: float = 0.057
-    x_offset_m: float = 0.004
-    y_offset_m: float = -0.003
+    x_offset_m: float = -0.00005
+    y_offset_m: float = 0.038
     hover_z_m: float = 0.190
     rotate_image_axes: bool = True
 

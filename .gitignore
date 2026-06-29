@@ -1,17 +1,18 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 .ipynb_checkpoints/
 .DS_Store
 
 # Generated artifacts
 outputs/
+build/
+dist/
+*.egg-info/
 *.mp4
 *.gif
-
-# Local reconstruction archive: preserved on disk, not part of the polished repo.
-notebooks/legacy/mario/raw_project_files/
-notebooks/legacy/reference/raw_project_files/
 
 # Local environments
 .env
@@ -19,7 +20,7 @@ notebooks/legacy/reference/raw_project_files/
 env/
 venv/
 
-# Large model binaries should be committed through Git LFS or documented separately.
+# Local model binaries
 models/*.h5
 models/*.keras
 models/*.zip

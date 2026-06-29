@@ -7,21 +7,22 @@ conda env create -f environment.yml
 conda activate roots-project
 ```
 
-The environment is pinned to Python 3.10 because the active stack relies on TensorFlow, PyBullet, OpenCV, scikit-image, skan, and patchify. The system Python 3.13 installation is intentionally not used.
+Python 3.10 is required for the pinned TensorFlow, PyBullet, OpenCV, scikit-image,
+skan, and patchify dependencies.
 
 ## Model Placement
 
-The active model path is:
+The default model path is:
 
 ```text
 models/mario_230623_unet_model_128px.h5
 ```
 
-The model is large. For GitHub publishing, use one of:
+The model exceeds GitHub's regular file limit. Distribute it using:
 
-- Git LFS for `models/*.h5`
-- a release asset
-- documented manual placement in `models/`
+- Git LFS;
+- a GitHub release asset; or
+- an external download with placement instructions.
 
 ## Quick Checks
 
@@ -29,6 +30,6 @@ The model is large. For GitHub publishing, use one of:
 pytest
 python scripts/run_pid_demo.py --headless --max-tips 1
 python scripts/run_cv_pipeline.py --image data/samples/task5_test_image.png --model models/mario_230623_unet_model_128px.h5
+python scripts/run_full_demo.py --headless --max-tips 1 --seed 23
+python scripts/run_full_demo.py --image data/samples/test_image.png --headless --max-tips 1
 ```
-
-

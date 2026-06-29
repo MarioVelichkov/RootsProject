@@ -4,18 +4,31 @@ import pybullet_data
 import math
 import logging
 import os
-import random
 from pathlib import Path
+
+from .plates import select_bundled_plate
 
 #logging.basicConfig(level=logging.INFO)
 
 class Simulation:
-    def __init__(self, num_agents, render=True, rgb_array=False, assets_dir=None):
+    def __init__(
+        self,
+        num_agents,
+        render=True,
+        rgb_array=False,
+        assets_dir=None,
+        plate_image_path=None,
+        texture_path=None,
+        plate_origin_xy=(0.10770, 0.062),
+        plate_size_m=0.150,
+    ):
         self.render = render
         self.rgb_array = rgb_array
         self.assets_dir = Path(assets_dir) if assets_dir else Path(__file__).resolve().parent / "assets"
         self.textures_dir = self.assets_dir / "textures"
         self.plate_textures_dir = self.textures_dir / "_plates"
+        self.plate_origin_xy = tuple(float(value) for value in plate_origin_xy)
+        self.plate_size_m = float(plate_size_m)
         if render:
             mode = p.GUI # for graphical version
         else:
@@ -28,15 +41,22 @@ class Simulation:
         p.setAdditionalSearchPath(str(self.assets_dir))
         p.setGravity(0,0,-10)
         #p.setPhysicsEngineParameter(contactBreakingThreshold=0.000001)
-        # load a texture
-        texture_list = sorted(path for path in self.textures_dir.iterdir() if path.is_file())
-        plate_texture_list = sorted(path for path in self.plate_textures_dir.iterdir() if path.is_file())
-        if not texture_list or not plate_texture_list:
-            raise FileNotFoundError(f"Simulation textures not found under {self.textures_dir}")
-        random_texture_index = random.randrange(min(len(texture_list), len(plate_texture_list)))
-        random_texture = texture_list[random_texture_index]
-        self.plate_image_path = str(plate_texture_list[random_texture_index])
-        self.textureId = p.loadTexture(str(random_texture))
+        if (plate_image_path is None) != (texture_path is None):
+            raise ValueError("plate_image_path and texture_path must be supplied together.")
+        if plate_image_path is None:
+            selection = select_bundled_plate(self.assets_dir)
+            plate_image_path = selection.source_image
+            texture_path = selection.texture_image
+
+        selected_image = Path(plate_image_path).resolve()
+        selected_texture = Path(texture_path).resolve()
+        if not selected_image.is_file():
+            raise FileNotFoundError(f"Plate image not found: {selected_image}")
+        if not selected_texture.is_file():
+            raise FileNotFoundError(f"Plate texture not found: {selected_texture}")
+        self.plate_image_path = str(selected_image)
+        self.texture_path = str(selected_texture)
+        self.textureId = p.loadTexture(str(selected_texture))
         #print(f'textureId: {self.textureId}')
 
         # Set the camera parameters
@@ -54,6 +74,7 @@ class Simulation:
 
         # define the pipette offset
         self.pipette_offset = [0.073, 0.0895, 0.0895]
+        self.droplet_radius = 0.003
         # dictionary to keep track of the current pipette position per robot
         self.pipette_positions = {}
 
@@ -66,6 +87,7 @@ class Simulation:
         # dictionary to keep track of the droplet positions on specimens key for specimenId, list of droplet positions
         self.droplet_positions = {}
         self.last_droplet_position = None
+        self.last_droplet_contact_position = None
 
         # Function to compute view matrix based on these parameters
         # def compute_camera_view(cameraDistance, cameraYaw, cameraPitch, cameraTargetPosition):
@@ -113,7 +135,12 @@ class Simulation:
                     #p.createConstraint(self.baseplaneId, -1, robotId, -1, p.JOINT_FIXED, [0, 0, 0], position, [0, 0, 0])
 
                     # Load the specimen with an offset
-                    offset = [0.18275-0.00005, 0.163-0.026, 0.057]
+                    half_plate = self.plate_size_m / 2.0
+                    offset = [
+                        self.plate_origin_xy[0] + half_plate,
+                        self.plate_origin_xy[1] + half_plate,
+                        0.057,
+                    ]
                     position_with_offset = [position[0] + offset[0], position[1] + offset[1], position[2] + offset[2]]
                     rotate_90 = p.getQuaternionFromEuler([0, 0, -math.pi/2])
                     planeId = p.loadURDF(str(self.assets_dir / "custom.urdf"), position_with_offset, rotate_90)#start_orientation)
@@ -204,6 +231,7 @@ class Simulation:
         # dictionary to keep track of the droplet positions on specimens key for specimenId, list of droplet positions
         self.droplet_positions = {}
         self.last_droplet_position = None
+        self.last_droplet_contact_position = None
 
         # Create the robots
         self.create_robots(num_agents)
@@ -271,6 +299,7 @@ class Simulation:
             p.setJointMotorControl2(self.robotIds[i], 1, p.VELOCITY_CONTROL, targetVelocity=-actions[i][1], force=500)
             p.setJointMotorControl2(self.robotIds[i], 2, p.VELOCITY_CONTROL, targetVelocity=actions[i][2], force=800)
             if actions[i][3] == 1:
+                self.last_droplet_contact_position = None
                 self.last_droplet_position = self.drop(robotId=self.robotIds[i])
                 #logging.info(f'drop: {i}')
 
@@ -293,12 +322,15 @@ class Simulation:
         specimen_position = p.getBasePositionAndOrientation(self.specimenIds[0])[0]
         #logging.info(f'droplet_position: {droplet_position}')
         # Create a sphere to represent the droplet
-        sphereRadius = 0.003  # Adjust as needed
+        sphereRadius = self.droplet_radius
         sphereColor = [1, 0, 0, 0.5]  # RGBA (Red in this case)
         visualShapeId = p.createVisualShape(shapeType=p.GEOM_SPHERE, radius=sphereRadius, rgbaColor=sphereColor)
         #add collision to the sphere
         collision = p.createCollisionShape(shapeType=p.GEOM_SPHERE, radius=sphereRadius)
         sphereBody = p.createMultiBody(baseMass=0.1, baseVisualShapeIndex=visualShapeId, baseCollisionShapeIndex=collision)
+        # The droplet starts at the pipette tip and must not be deleted by an
+        # initial overlap with its source robot.
+        p.setCollisionFilterPair(sphereBody, robotId, -1, -1, enableCollision=0)
         # Calculate the position of the droplet at the tip of the pipette but at the same z coordinate as the specimen
         droplet_position = [robot_position[0]+x_offset, robot_position[1]+y_offset, robot_position[2]+z_offset]
                             #specimen_position[2] + sphereRadius+0.015/2+0.06]
@@ -366,6 +398,14 @@ class Simulation:
                 #logging.info(f'sphereId: {sphereId}, collision disabled')
                 # Get current position and orientation of the sphere
                 sphere_position, sphere_orientation = p.getBasePositionAndOrientation(sphereId)
+                specimen_top = p.getAABB(specimenId)[1][2]
+                sphere_position = (
+                    sphere_position[0],
+                    sphere_position[1],
+                    specimen_top + self.droplet_radius,
+                )
+                p.resetBasePositionAndOrientation(sphereId, sphere_position, sphere_orientation)
+                self.last_droplet_contact_position = sphere_position
                 # Fix the sphere in place relative to the world
                 p.createConstraint(parentBodyUniqueId=sphereId,
                                     parentLinkIndex=-1,
@@ -433,8 +473,8 @@ class Simulation:
 
             # Adjust the x, y, z values based on the robot's current position and pipette offset
             robot_position = p.getBasePositionAndOrientation(robotId)[0]
-            adjusted_x = x - robot_position[0] - self.pipette_offset[0]
-            adjusted_y = y - robot_position[1] - self.pipette_offset[1]
+            adjusted_x = robot_position[0] + self.pipette_offset[0] - x
+            adjusted_y = robot_position[1] + self.pipette_offset[1] - y
             adjusted_z = z - robot_position[2] - self.pipette_offset[2]
 
             # Reset the joint positions/start position
@@ -445,6 +485,14 @@ class Simulation:
     # function to return the path of the current plate image
     def get_plate_image(self):
         return self.plate_image_path
+
+    def get_plate_bounds_xy(self):
+        min_x, min_y = self.plate_origin_xy
+        return (min_x, min_x + self.plate_size_m, min_y, min_y + self.plate_size_m)
+
+    def contains_plate_xy(self, x, y):
+        min_x, max_x, min_y, max_y = self.get_plate_bounds_xy()
+        return min_x <= x <= max_x and min_y <= y <= max_y
     
     # close the simulation
     def close(self):

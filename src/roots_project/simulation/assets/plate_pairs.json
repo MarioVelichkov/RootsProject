@@ -1,0 +1,14 @@
+{
+  "pairs": [
+    {"id": "01", "texture": "01.png", "source": "030_43-2-ROOT1-2023-08-08_pvdCherry_OD001_Col0_05-Fish Eye Corrected.png"},
+    {"id": "02", "texture": "02.png", "source": "031_43-6-ROOT1-2023-08-08_control_pH7_-Fe+B_f6h1_02-Fish Eye Corrected.png"},
+    {"id": "03", "texture": "03.png", "source": "033_43-13-ROOT1-2023-08-08_pvd_OD01_Col0_02-Fish Eye Corrected.png"},
+    {"id": "04", "texture": "04.png", "source": "033_43-14-ROOT1-2023-08-08_control_pH7_-Fe+B_col0_03-Fish Eye Corrected.png"},
+    {"id": "05", "texture": "05.png", "source": "034_43-13-ROOT1-2023-08-08_control_pH7_-Fe+B_col0_02-Fish Eye Corrected.png"},
+    {"id": "06", "texture": "06.png", "source": "035_43-17-ROOT1-2023-08-08_mock_pH5_+Fe_Col0_04-Fish Eye Corrected.png"},
+    {"id": "07", "texture": "07.png", "source": "035_43-19-ROOT1-2023-08-08_pvd_OD01_f6h1_05-Fish Eye Corrected.png"},
+    {"id": "08", "texture": "08.png", "source": "037_43-18-ROOT1-2023-08-08_mock_pH5_+Fe_Col0_04-Fish Eye Corrected.png"},
+    {"id": "09", "texture": "09.png", "source": "038_43-13-ROOT1-2023-08-08_control_pH7_-Fe+B_col0_04-Fish Eye Corrected.png"},
+    {"id": "10", "texture": "10.png", "source": "038_43-14-ROOT1-2023-08-08_pvdCherry_OD001_f6h1_04-Fish Eye Corrected.png"}
+  ]
+}

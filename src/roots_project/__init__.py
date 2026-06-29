@@ -1,4 +1,4 @@
-"""Production package for the Roots Project portfolio demo."""
+"""Plant root analysis and OT-2 simulation package."""
 
 __all__ = ["__version__"]
 __version__ = "0.1.0"

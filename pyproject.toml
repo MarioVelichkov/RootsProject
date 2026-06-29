@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "roots-project"
 version = "0.1.0"
-description = "Plant root segmentation and OT-2 simulation demo for portfolio presentation."
+description = "Plant root segmentation and OT-2 robotics simulation."
 readme = "README.md"
 requires-python = ">=3.10,<3.11"
 authors = [{ name = "Mario Velichkov" }]
