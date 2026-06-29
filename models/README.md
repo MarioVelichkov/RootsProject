@@ -8,5 +8,4 @@ Default model:
 mario_230623_unet_model_128px.h5
 ```
 
-The model file is ignored by Git because it exceeds GitHub's regular file limit.
-Distribute it with Git LFS, a GitHub release asset, or an external download.
+Model can be downloaded from this here: [LINK](https://drive.google.com/drive/folders/1fbyiFH7el7q_yhULbu8bflYDT6Uo8qAL?usp=sharing)
