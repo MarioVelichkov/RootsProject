@@ -3,6 +3,8 @@
 Computer vision and robotics pipeline for detecting plant root tips and guiding a
 simulated OT-2 pipette to inoculation targets.
 
+![Roots Project simulation preview](RootsProjectPreview.gif)
+
 ```text
 Plate image -> U-Net root segmentation -> skeleton/root tip extraction
             -> robot coordinate conversion -> PID-controlled OT-2 simulation
