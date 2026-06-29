@@ -13,6 +13,7 @@ dist/
 *.egg-info/
 *.mp4
 *.gif
+!RootsProjectPreview.gif
 
 # Local environments
 .env
