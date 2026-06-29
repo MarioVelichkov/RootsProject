@@ -78,5 +78,3 @@ Generated masks, skeletons, coordinates, diagnostics, and JSON results are writt
 
 - [Architecture](docs/architecture.md)
 - [Setup](docs/setup.md)
-- [Limitations](docs/limitations.md)
-- [Provenance](docs/provenance.md)
